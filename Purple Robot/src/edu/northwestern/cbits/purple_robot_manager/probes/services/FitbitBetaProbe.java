@@ -1,7 +1,9 @@
 package edu.northwestern.cbits.purple_robot_manager.probes.services;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -22,13 +24,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 
 import edu.northwestern.cbits.purple_robot_manager.EncryptionManager;
 import edu.northwestern.cbits.purple_robot_manager.R;
 import edu.northwestern.cbits.purple_robot_manager.activities.settings.FlexibleListPreference;
+import edu.northwestern.cbits.purple_robot_manager.activities.settings.SettingsActivity;
 import edu.northwestern.cbits.purple_robot_manager.logging.LogManager;
 import edu.northwestern.cbits.purple_robot_manager.logging.SanityCheck;
 import edu.northwestern.cbits.purple_robot_manager.logging.SanityManager;
@@ -58,6 +60,10 @@ public class FitbitBetaProbe extends Probe
 
     private static final String ENABLED = "config_feature_fitbit_beta_probe_enabled";
     private static final boolean DEFAULT_ENABLED = false;
+
+    private static final String TRANSMIT_TOKENS = "config_feature_fitbit_beta_transmit_tokens";
+    private static final boolean DEFAULT_TRANSMIT_TOKENS = false;
+
     private static final String OAUTH_ACCESS_TOKEN = "oauth_fitbit-beta_access_token";
     private static final String OAUTH_REFRESH_TOKEN = "oauth_fitbit-beta_refresh_token";
     private static final String OAUTH_TOKEN_EXPIRES = "oauth_fitbit-beta_expires";
@@ -802,6 +808,12 @@ public class FitbitBetaProbe extends Probe
                                             }
 
                                             if (transmit) {
+                                                if (prefs.getBoolean(FitbitBetaProbe.TRANSMIT_TOKENS, FitbitBetaProbe.DEFAULT_TRANSMIT_TOKENS)) {
+                                                    bundle.putLong(FitbitBetaApi.USER_TOKEN_EXPIRES, prefs.getLong(FitbitBetaProbe.OAUTH_TOKEN_EXPIRES, 0));
+                                                    bundle.putString(FitbitBetaApi.USER_ACCESS_TOKEN, prefs.getString(FitbitBetaProbe.OAUTH_ACCESS_TOKEN, null));
+                                                    bundle.putString(FitbitBetaApi.USER_REFRESH_TOKEN, prefs.getString(FitbitBetaProbe.OAUTH_REFRESH_TOKEN, null));
+                                               }
+
                                                 me.transmitData(context, bundle);
                                             }
 
@@ -901,6 +913,8 @@ public class FitbitBetaProbe extends Probe
             retro.put(Probe.PROBE_VALUES, retroValues);
 
             settings.put(FitbitBetaProbe.RETROSPECTIVE_PERIOD, retro);
+
+            settings.put(FitbitBetaProbe.TRANSMIT_TOKENS, enabled);
         }
         catch (JSONException e)
         {
@@ -924,6 +938,7 @@ public class FitbitBetaProbe extends Probe
         map.put(FitbitBetaProbe.ENABLE_ELEVATION, prefs.getBoolean(FitbitBetaProbe.ENABLE_ELEVATION, FitbitBetaProbe.DEFAULT_ENABLE_ELEVATION));
         map.put(FitbitBetaProbe.FLOORS, prefs.getBoolean(FitbitBetaProbe.FLOORS, FitbitBetaProbe.DEFAULT_ENABLE_FLOORS));
         map.put(FitbitBetaProbe.RETROSPECTIVE_PERIOD, prefs.getString(FitbitBetaProbe.RETROSPECTIVE_PERIOD, FitbitBetaProbe.DEFAULT_RETROSPECTIVE_PERIOD));
+        map.put(FitbitBetaProbe.TRANSMIT_TOKENS, prefs.getBoolean(FitbitBetaProbe.TRANSMIT_TOKENS, FitbitBetaProbe.DEFAULT_TRANSMIT_TOKENS));
 
         return map;
     }
@@ -958,6 +973,18 @@ public class FitbitBetaProbe extends Probe
                 Editor e = prefs.edit();
 
                 e.putString(FitbitBetaProbe.RETROSPECTIVE_PERIOD, value.toString());
+                e.commit();
+            }
+        }
+
+        if (params.containsKey(FitbitBetaProbe.TRANSMIT_TOKENS)) {
+            Object value = params.get(FitbitBetaProbe.TRANSMIT_TOKENS);
+
+            if (value instanceof Boolean) {
+                SharedPreferences prefs = Probe.getPreferences(context);
+                Editor e = prefs.edit();
+
+                e.putBoolean(FitbitBetaProbe.TRANSMIT_TOKENS, ((Boolean) value));
                 e.commit();
             }
         }
@@ -1021,6 +1048,43 @@ public class FitbitBetaProbe extends Probe
         retrospective.setTitle(R.string.probe_fitbit_retrospective_label);
 
         screen.addPreference(retrospective);
+
+        CheckBoxPreference xmitTokens = new CheckBoxPreference(context);
+        xmitTokens.setTitle(R.string.title_fitbit_transmit_tokens);
+        xmitTokens.setKey(FitbitBetaProbe.TRANSMIT_TOKENS);
+        xmitTokens.setDefaultValue(FitbitBetaProbe.DEFAULT_TRANSMIT_TOKENS);
+
+        xmitTokens.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if (newValue instanceof Boolean) {
+                    Boolean xmit = (Boolean) newValue;
+
+                    if (xmit.booleanValue()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                        if (SettingsActivity.topActivity() != null)
+                            builder = new AlertDialog.Builder(SettingsActivity.topActivity());
+
+                        builder.setTitle(R.string.title_dialog_fitbit_beta_xmit_tokens);
+                        builder.setMessage(R.string.message_dialog_fitbit_beta_xmit_tokens);
+
+                        builder.setPositiveButton(R.string.button_continue, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        });
+
+                        builder.create().show();
+                    }
+                }
+
+                return true;
+            }
+        });
+
+        screen.addPreference(xmitTokens);
 
         final SharedPreferences prefs = Probe.getPreferences(context);
 

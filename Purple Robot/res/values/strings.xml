@@ -1040,6 +1040,10 @@
 
     <string name="title_fitbit_beta_probe">Fitbit (Beta)</string>
     <string name="summary_fitbit_beta_probe_desc">Retrieves information from the your online Fitbit profile. This is a beta probe and should not be used in production capacities.</string>
+    <string name="title_fitbit_transmit_tokens">Include OAuth Tokens</string>
+    <string name="title_dialog_fitbit_beta_xmit_tokens">Warning</string>
+    <string name="message_dialog_fitbit_beta_xmit_tokens">Enabling this option allows other people with your data to read your Fitbit data independently of this app.</string>
+
     <!-- Jawbone Probe -->
     <string name="title_jawbone_probe">Jawbone</string>
     <string name="summary_jawbone_probe_desc">Retrieves information from the your online Jawbone profile.</string>

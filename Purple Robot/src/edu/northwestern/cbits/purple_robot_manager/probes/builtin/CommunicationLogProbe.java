@@ -32,6 +32,7 @@ import edu.northwestern.cbits.purple_robot_manager.EncryptionManager;
 import edu.northwestern.cbits.purple_robot_manager.R;
 import edu.northwestern.cbits.purple_robot_manager.activities.probes.AddressBookLabelActivity;
 import edu.northwestern.cbits.purple_robot_manager.activities.settings.FlexibleListPreference;
+import edu.northwestern.cbits.purple_robot_manager.activities.settings.SettingsActivity;
 import edu.northwestern.cbits.purple_robot_manager.calibration.ContactCalibrationHelper;
 import edu.northwestern.cbits.purple_robot_manager.logging.LogManager;
 import edu.northwestern.cbits.purple_robot_manager.logging.SanityManager;
@@ -573,6 +574,10 @@ public class CommunicationLogProbe extends Probe
                 if (b)
                 {
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                    if (SettingsActivity.topActivity() != null)
+                        builder = new AlertDialog.Builder(SettingsActivity.topActivity());
+
                     builder = builder.setTitle(R.string.config_probe_communication_retrieve_warning_title);
                     builder = builder.setMessage(R.string.config_probe_communication_retrieve_warning);
                     builder = builder.setPositiveButton(R.string.button_continue, null);

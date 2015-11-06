@@ -39,11 +39,17 @@ public class SettingsActivity extends AppCompatActivity
     private static final String PREFERENCE_SCREEN_KEY = "PREFERENCE_SCREEN_KEY";
     private static HashMap<String, PreferenceScreen> _screens = new HashMap<>();
 
+    private static SettingsActivity _topActivity = null;
+
     public static boolean useExternalStorage(Context context)
     {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         return prefs.getBoolean("config_external_storage", false);
+    }
+
+    public static SettingsActivity topActivity() {
+        return SettingsActivity._topActivity;
     }
 
     public static class SettingsPreferenceFragment extends PreferenceFragment
@@ -275,6 +281,13 @@ public class SettingsActivity extends AppCompatActivity
         transaction.commit();
 
         LogManager.getInstance(this).log("pr_settings_visited", null);
+    }
+
+    public void onResume()
+    {
+        super.onResume();
+
+        SettingsActivity._topActivity = this;
     }
 
     private void mapScreens(PreferenceGroup screen)
